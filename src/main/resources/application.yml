@@ -1,1 +1,15 @@
 
+spring:
+  application:
+    name: Reactive-Mongo
+
+  data:
+    mongodb:
+      auto-index-creation: true
+      uri: mongodb://127.0.0.1:27017/kimbs
+      repositories:
+        type: reactive
+
+org:
+  kimbs:
+    use-mongo-replica: false
