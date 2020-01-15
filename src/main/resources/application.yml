@@ -6,10 +6,14 @@ spring:
   data:
     mongodb:
       auto-index-creation: true
-      uri: mongodb://127.0.0.1:27017/kimbs
+      uri: mongodb://kimbs:kimbs@127.0.0.1:27017/agent
       repositories:
         type: reactive
 
+logging:
+  level:
+    org.springframework.data.mongodb.core.ReactiveMongoTemplate: DEBUG
+#    - org.springframework.data.mongodb.core.MongoTemplate: DEBUG
 org:
   kimbs:
     use-mongo-replica: false
