@@ -1,7 +1,6 @@
 package org.kimbs.demo.repository;
 
 import org.kimbs.demo.document.Employee;
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.domain.Sort;
 import org.springframework.data.mongodb.core.ReactiveMongoTemplate;
 import org.springframework.data.mongodb.core.query.Criteria;
@@ -23,8 +22,11 @@ public class EmployeeRepository {
 //    8. 급여가 두 번째로 많은 사원 이름, 급여 출력
 //    select ename, sal from (select rownum tempnum, ename, sal from (select * from emp order by sal desc) e ) b where b.tempnum = 2;
 
-    @Autowired
-    private ReactiveMongoTemplate template;
+    private final ReactiveMongoTemplate template;
+
+    public EmployeeRepository(ReactiveMongoTemplate template) {
+        this.template = template;
+    }
 
     // 모든 종업원을 찾아라.
     public Flux<Employee> findAllEmployee() {
