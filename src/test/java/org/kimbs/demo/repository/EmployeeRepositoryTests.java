@@ -24,7 +24,7 @@ import static org.assertj.core.api.Assertions.*;
 import static org.junit.jupiter.api.Assertions.*;
 
 @SpringBootTest
-public class EmployeeTests {
+public class EmployeeRepositoryTests {
 
     @Autowired
     EmployeeRepository employeeRepository;
