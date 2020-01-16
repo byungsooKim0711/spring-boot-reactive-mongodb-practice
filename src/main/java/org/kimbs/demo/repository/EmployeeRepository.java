@@ -4,19 +4,15 @@ import org.kimbs.demo.document.Employee;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.domain.Sort;
 import org.springframework.data.mongodb.core.ReactiveMongoTemplate;
-import org.springframework.data.mongodb.core.aggregation.Aggregation;
 import org.springframework.data.mongodb.core.query.Criteria;
 import org.springframework.data.mongodb.core.query.Query;
 import org.springframework.stereotype.Repository;
 import reactor.core.publisher.Flux;
+import reactor.core.publisher.Mono;
 
 @Repository
 public class EmployeeRepository {
 
-//    4. 가장 많은 급여를 받는 종업원을 찾아라.
-//    -1 select ename, sal from emp where sal >= all (select sal from emp); <= all 사용
-//    -2 select ename, sal from emp where = (select max(sal) from emp); <== max 사용
-//
 //    5. 자신의 매니저보다 더 많은 급여를 받는 사원을 찾아라/
 //            - select e1.ename 사원이름, e1.sal 사원급여, e2.ename 매니저이름, e2.sal 매니저급여
 //    from emp e1, emp e2 where e1.mgr = e2.empno and e1.sal > e2.sal;
@@ -64,12 +60,26 @@ public class EmployeeRepository {
     }
 
     // 종업원의 급여를 내림차순 으로 찾아라. 급여가 같을경우 이름을 오름차순으로 찾아라.
-    public Flux<Employee> findEmployeeByDepartmentName(String departmentName) {
+    public Flux<Employee> findByEmployeeByOrderBySalaryDescNameAsc() {
         Query query = new Query();
+        query.with(Sort.by(Sort.Direction.DESC, "salary"));
+        query.with(Sort.by(Sort.Direction.ASC, "name"));
 
-        return Flux.empty();
+        return template.find(query, Employee.class);
     }
 
     // 'sales' 부서에 근무하는 사원의 이름과 급여를 급여 내림차순 으로 찾아라. 급여가 같을경우 이름 오름차순으로 찾아라.
     // - select ename, sal from emp, ept where emp.deptno = dept.deptno and dept.dname = 'SALES' order by sal desc, ename asc;
+
+    // --
+
+    // 4. 가장 많은 급여를 받는 종업원을 찾아라.
+    // -1 select ename, sal from emp where sal >= all (select sal from emp); <= all 사용
+    // -2 select ename, sal from emp where = (select max(sal) from emp); <== max 사용
+    public Mono<Employee> findByEmployeeByMostSalary() {
+        Query query = new Query();
+        query.with(Sort.by(Sort.Direction.DESC, "salary"));
+
+        return template.findOne(query, Employee.class);
+    }
 }
