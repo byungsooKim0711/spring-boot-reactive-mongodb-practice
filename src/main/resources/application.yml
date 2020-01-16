@@ -5,8 +5,9 @@ spring:
 
   data:
     mongodb:
-      auto-index-creation: true
+      # uri: mongodb://<username:password@>[ip:port]/[database-name]<?options...>
       uri: mongodb://kimbs:kimbs@127.0.0.1:27017/agent
+      auto-index-creation: true
       repositories:
         type: reactive
 
