@@ -11,10 +11,14 @@ import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.data.mongodb.core.MongoTemplate;
 import org.springframework.data.mongodb.core.query.Query;
 import reactor.core.publisher.Flux;
+import reactor.core.publisher.Mono;
 
 import java.time.LocalDateTime;
 import java.util.Arrays;
+import java.util.Collection;
+import java.util.Comparator;
 import java.util.List;
+import java.util.stream.Collectors;
 
 import static org.assertj.core.api.Assertions.*;
 import static org.junit.jupiter.api.Assertions.*;
@@ -27,6 +31,8 @@ public class EmployeeTests {
 
     @Autowired
     MongoTemplate mongoTemplate;
+
+    private Collection<Employee> db;
 
     @BeforeEach
     void setUp() {
@@ -47,7 +53,7 @@ public class EmployeeTests {
         Employee e14 = new Employee(null, 7934, "MILLER", JobCode.CLERK.getCode(), 7782, LocalDateTime.now(), 1300, null, 10);
 
         List<Employee> employees = Arrays.asList(e1, e2, e3, e4, e5, e6, e7, e8, e9, e10, e11, e12, e13, e14);
-        mongoTemplate.insertAll(employees);
+        db = mongoTemplate.insertAll(employees);
     }
 
     @AfterEach
@@ -101,5 +107,36 @@ public class EmployeeTests {
 
         // assert
         assertThat(actual).hasSize(3).extracting(e -> e.getName()).contains("SMITH", "JAMES", "ADAMS");
+    }
+
+    @Test
+    @DisplayName("종업원을 급여를 내림차순으로 이름을 오름차순으로 정렬하기")
+    void testFindByEmployeeByOrderBySalaryDescNameAsc() {
+        // actual
+        Flux<Employee> employeeFlux = employeeRepository.findByEmployeeByOrderBySalaryDescNameAsc();
+
+        List<Employee> actual = employeeFlux.collectList().block();
+
+        // assert
+        // salary desc, name asc;
+        List<Employee> expected = db.stream()
+                .sorted(Comparator.comparing(Employee::getSalary, Comparator.reverseOrder())
+                        .thenComparing(Employee::getName)).collect(Collectors.toList());
+
+        assertThat(actual).hasSize(14);
+        assertIterableEquals(expected, actual);
+    }
+
+    @Test
+    void testFindByEmployeeByMostSalary() {
+        // actual
+        Mono<Employee> employeeMono = employeeRepository.findByEmployeeByMostSalary();
+
+        Employee actual = employeeMono.block();
+
+        // assert
+        assertEquals("KING", actual.getName());
+        assertEquals(JobCode.PRESIDENT.getCode(), actual.getJob());
+        assertEquals(5000, actual.getSalary());
     }
 }
