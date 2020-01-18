@@ -4,6 +4,7 @@ import lombok.AllArgsConstructor;
 import lombok.Data;
 import lombok.NoArgsConstructor;
 import org.bson.types.ObjectId;
+import org.springframework.data.mongodb.core.index.Indexed;
 import org.springframework.data.mongodb.core.mapping.Document;
 import org.springframework.data.mongodb.core.mapping.Field;
 import org.springframework.data.mongodb.core.mapping.MongoId;
@@ -26,6 +27,7 @@ public class Employee {
     private String name;
 
     @Field("JOB")
+    @Indexed(name = "IDX_EMPLOYEE_JOB")
     private String job;
 
     @Field("MANAGER")
