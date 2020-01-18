@@ -1,8 +1,10 @@
 package org.kimbs.demo.repository;
 
 import org.kimbs.demo.document.Employee;
+import org.kimbs.demo.document.result.EmployeeByDepartmentAverageSalary;
 import org.springframework.data.domain.Sort;
 import org.springframework.data.mongodb.core.ReactiveMongoTemplate;
+import org.springframework.data.mongodb.core.aggregation.Aggregation;
 import org.springframework.data.mongodb.core.query.Criteria;
 import org.springframework.data.mongodb.core.query.Query;
 import org.springframework.stereotype.Repository;
@@ -83,5 +85,15 @@ public class EmployeeRepository {
         query.with(Sort.by(Sort.Direction.DESC, "salary"));
 
         return template.findOne(query, Employee.class);
+    }
+
+    // 부서별 종업원들의 급여 평균을 구하라
+    public Flux<EmployeeByDepartmentAverageSalary> findByEmployeeByDepartmentAverageSalary() {
+        Aggregation aggregation = Aggregation.newAggregation(
+                Aggregation.group("departmentId").avg("salary").as("salaryAvg"),
+                Aggregation.sort(Sort.Direction.DESC, "salaryAvg")
+        );
+
+        return template. aggregate(aggregation, Employee.class, EmployeeByDepartmentAverageSalary.class);
     }
 }

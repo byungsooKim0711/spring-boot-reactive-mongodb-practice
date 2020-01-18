@@ -6,6 +6,7 @@ import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.kimbs.demo.document.Employee;
 import org.kimbs.demo.document.code.JobCode;
+import org.kimbs.demo.document.result.EmployeeByDepartmentAverageSalary;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.autoconfigure.data.mongo.DataMongoTest;
 import org.springframework.context.annotation.ComponentScan;
@@ -15,10 +16,7 @@ import reactor.core.publisher.Flux;
 import reactor.core.publisher.Mono;
 
 import java.time.LocalDateTime;
-import java.util.Arrays;
-import java.util.Collection;
-import java.util.Comparator;
-import java.util.List;
+import java.util.*;
 import java.util.stream.Collectors;
 
 import static org.assertj.core.api.Assertions.*;
@@ -66,7 +64,7 @@ public class EmployeeRepositoryTests {
     @Test
     @DisplayName("모든 종업원 찾기")
     void testWhenRepositoryIsEmptyAtFindAllEmployee() {
-        // actual
+        // act
         Flux<Employee> employeeFlux = employeeRepository.findAllEmployee().log();
 
         List<Employee> actual = employeeFlux.collectList().block();
@@ -78,7 +76,7 @@ public class EmployeeRepositoryTests {
     @Test
     @DisplayName("급여가 2000 이상인 종업원 찾기")
     void testFindEmployeeGreaterThanSalary() {
-        // actual
+        // act
         Flux<Employee> employeeFlux = employeeRepository.findEmployeeGreaterThanSalary(2000).log();
 
         List<Employee> actual = employeeFlux.collectList().block();
@@ -90,7 +88,7 @@ public class EmployeeRepositoryTests {
     @Test
     @DisplayName("Manager가 없는 종업원 찾기")
     void testFindEmployeeNotExistsManager() {
-        // actual
+        // act
         Flux<Employee> employeeFlux = employeeRepository.findEmployeeNotExistsManager().log();
 
         List<Employee> actual = employeeFlux.collectList().block();
@@ -102,7 +100,7 @@ public class EmployeeRepositoryTests {
     @Test
     @DisplayName("이름에 M과 S가 포함된 종업원 찾기")
     void testFindEmployeeByNameContainsMorS() {
-        // actual
+        // act
         Flux<Employee> employeeFlux = employeeRepository.findEmployeeByNameContainsMorS().log();
 
         List<Employee> actual = employeeFlux.collectList().block();
@@ -114,7 +112,7 @@ public class EmployeeRepositoryTests {
     @Test
     @DisplayName("종업원을 급여를 내림차순으로 이름을 오름차순으로 정렬하기")
     void testFindByEmployeeByOrderBySalaryDescNameAsc() {
-        // actual
+        // act
         Flux<Employee> employeeFlux = employeeRepository.findByEmployeeByOrderBySalaryDescNameAsc().log();
 
         List<Employee> actual = employeeFlux.collectList().block();
@@ -132,7 +130,7 @@ public class EmployeeRepositoryTests {
     @Test
     @DisplayName("급여가 제일 많은 종업원 찾기")
     void testFindByEmployeeByMostSalary() {
-        // actual
+        // act
         Mono<Employee> employeeMono = employeeRepository.findByEmployeeByMostSalary().log();
 
         Employee actual = employeeMono.block();
@@ -141,5 +139,28 @@ public class EmployeeRepositoryTests {
         assertEquals("KING", actual.getName());
         assertEquals(JobCode.PRESIDENT.getCode(), actual.getJob());
         assertEquals(5000, actual.getSalary());
+    }
+
+    @Test
+    @DisplayName("부서별 종업원의 평균 급여를 구하기")
+    void testFindByEmployeeByDepartmentAverageSalary() {
+        // arrange
+        Map<Integer, Double> map = db.stream().collect(Collectors.groupingBy(Employee::getDepartmentId, Collectors.averagingDouble(Employee::getSalary)));
+        List<EmployeeByDepartmentAverageSalary> list = new ArrayList<>();
+        map.keySet().forEach(key -> {
+            EmployeeByDepartmentAverageSalary e = new EmployeeByDepartmentAverageSalary();
+            e.setId(key);
+            e.setSalaryAvg(map.get(key));
+            list.add(e);
+        });
+
+        List<EmployeeByDepartmentAverageSalary> expected = list.stream().sorted(Comparator.comparing(EmployeeByDepartmentAverageSalary::getId)).collect(Collectors.toList());
+
+        // act
+        List<EmployeeByDepartmentAverageSalary> actual = employeeRepository.findByEmployeeByDepartmentAverageSalary().collectList().block();
+
+        // assert
+        assertThat(actual).hasSize(3);
+        assertIterableEquals(expected, actual);
     }
 }
