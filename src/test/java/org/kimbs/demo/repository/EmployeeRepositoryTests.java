@@ -7,7 +7,8 @@ import org.junit.jupiter.api.Test;
 import org.kimbs.demo.document.Employee;
 import org.kimbs.demo.document.code.JobCode;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.boot.test.context.SpringBootTest;
+import org.springframework.boot.test.autoconfigure.data.mongo.DataMongoTest;
+import org.springframework.context.annotation.ComponentScan;
 import org.springframework.data.mongodb.core.MongoTemplate;
 import org.springframework.data.mongodb.core.query.Query;
 import reactor.core.publisher.Flux;
@@ -23,7 +24,8 @@ import java.util.stream.Collectors;
 import static org.assertj.core.api.Assertions.*;
 import static org.junit.jupiter.api.Assertions.*;
 
-@SpringBootTest
+@DataMongoTest
+@ComponentScan(basePackages = {"org.kimbs.demo.repository"})
 public class EmployeeRepositoryTests {
 
     @Autowired
@@ -65,7 +67,7 @@ public class EmployeeRepositoryTests {
     @DisplayName("모든 종업원 찾기")
     void testWhenRepositoryIsEmptyAtFindAllEmployee() {
         // actual
-        Flux<Employee> employeeFlux = employeeRepository.findAllEmployee();
+        Flux<Employee> employeeFlux = employeeRepository.findAllEmployee().log();
 
         List<Employee> actual = employeeFlux.collectList().block();
 
@@ -77,7 +79,7 @@ public class EmployeeRepositoryTests {
     @DisplayName("급여가 2000 이상인 종업원 찾기")
     void testFindEmployeeGreaterThanSalary() {
         // actual
-        Flux<Employee> employeeFlux = employeeRepository.findEmployeeGreaterThanSalary(2000);
+        Flux<Employee> employeeFlux = employeeRepository.findEmployeeGreaterThanSalary(2000).log();
 
         List<Employee> actual = employeeFlux.collectList().block();
 
@@ -89,7 +91,7 @@ public class EmployeeRepositoryTests {
     @DisplayName("Manager가 없는 종업원 찾기")
     void testFindEmployeeNotExistsManager() {
         // actual
-        Flux<Employee> employeeFlux = employeeRepository.findEmployeeNotExistsManager();
+        Flux<Employee> employeeFlux = employeeRepository.findEmployeeNotExistsManager().log();
 
         List<Employee> actual = employeeFlux.collectList().block();
 
@@ -101,7 +103,7 @@ public class EmployeeRepositoryTests {
     @DisplayName("이름에 M과 S가 포함된 종업원 찾기")
     void testFindEmployeeByNameContainsMorS() {
         // actual
-        Flux<Employee> employeeFlux = employeeRepository.findEmployeeByNameContainsMorS();
+        Flux<Employee> employeeFlux = employeeRepository.findEmployeeByNameContainsMorS().log();
 
         List<Employee> actual = employeeFlux.collectList().block();
 
@@ -113,7 +115,7 @@ public class EmployeeRepositoryTests {
     @DisplayName("종업원을 급여를 내림차순으로 이름을 오름차순으로 정렬하기")
     void testFindByEmployeeByOrderBySalaryDescNameAsc() {
         // actual
-        Flux<Employee> employeeFlux = employeeRepository.findByEmployeeByOrderBySalaryDescNameAsc();
+        Flux<Employee> employeeFlux = employeeRepository.findByEmployeeByOrderBySalaryDescNameAsc().log();
 
         List<Employee> actual = employeeFlux.collectList().block();
 
@@ -128,9 +130,10 @@ public class EmployeeRepositoryTests {
     }
 
     @Test
+    @DisplayName("급여가 제일 많은 종업원 찾기")
     void testFindByEmployeeByMostSalary() {
         // actual
-        Mono<Employee> employeeMono = employeeRepository.findByEmployeeByMostSalary();
+        Mono<Employee> employeeMono = employeeRepository.findByEmployeeByMostSalary().log();
 
         Employee actual = employeeMono.block();
 
