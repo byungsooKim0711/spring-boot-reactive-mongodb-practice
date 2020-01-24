@@ -14,6 +14,7 @@ import org.springframework.data.mongodb.core.MongoTemplate;
 import org.springframework.data.mongodb.core.query.Query;
 import reactor.core.publisher.Flux;
 import reactor.core.publisher.Mono;
+import reactor.test.StepVerifier;
 
 import java.time.LocalDateTime;
 import java.util.*;
@@ -67,10 +68,8 @@ public class EmployeeRepositoryTests {
         // act
         Flux<Employee> employeeFlux = employeeRepository.findAllEmployee().log();
 
-        List<Employee> actual = employeeFlux.collectList().block();
-
         // assert
-        assertThat(actual).hasSize(14);
+        StepVerifier.create(employeeFlux).expectNextCount(14).verifyComplete();
     }
 
     @Test
@@ -79,10 +78,16 @@ public class EmployeeRepositoryTests {
         // act
         Flux<Employee> employeeFlux = employeeRepository.findEmployeeGreaterThanSalary(2000).log();
 
-        List<Employee> actual = employeeFlux.collectList().block();
-
         // assert
-        assertThat(actual).hasSize(6).extracting(e -> e.getName()).contains("JONES", "BLAKE", "CLARK", "SCOTT", "KING", "FORD");
+        StepVerifier.create(employeeFlux)
+                .recordWith(ArrayList::new)
+                .expectNextCount(6L)
+                .consumeRecordedWith(result -> {
+                    assertThat(result)
+                            .extracting(Employee::getName)
+                            .contains("JONES", "BLAKE", "CLARK", "SCOTT", "KING", "FORD");
+                })
+                .verifyComplete();
     }
 
     @Test
@@ -91,10 +96,15 @@ public class EmployeeRepositoryTests {
         // act
         Flux<Employee> employeeFlux = employeeRepository.findEmployeeNotExistsManager().log();
 
-        List<Employee> actual = employeeFlux.collectList().block();
-
         // assert
-        assertThat(actual).hasSize(1).extracting(e -> e.getName()).contains("KING");
+        StepVerifier.create(employeeFlux)
+                .recordWith(ArrayList::new)
+                .expectNextCount(1L)
+                .consumeRecordedWith(employees -> {
+                    assertThat(employees).extracting(Employee::getName).contains("KING");
+                })
+                .expectComplete()
+                .verify();
     }
 
     @Test
@@ -107,6 +117,14 @@ public class EmployeeRepositoryTests {
 
         // assert
         assertThat(actual).hasSize(3).extracting(e -> e.getName()).contains("SMITH", "JAMES", "ADAMS");
+        StepVerifier.create(employeeFlux)
+                .recordWith(ArrayList::new)
+                .expectNextCount(3L)
+                .consumeRecordedWith(employees -> {
+                    assertThat(employees).extracting(Employee::getName).contains("SMITH", "JAMES", "ADAMS");
+                })
+                .expectComplete()
+                .verify();
     }
 
     @Test
@@ -133,12 +151,15 @@ public class EmployeeRepositoryTests {
         // act
         Mono<Employee> employeeMono = employeeRepository.findByEmployeeByMostSalary().log();
 
-        Employee actual = employeeMono.block();
-
         // assert
-        assertEquals("KING", actual.getName());
-        assertEquals(JobCode.PRESIDENT.getCode(), actual.getJob());
-        assertEquals(5000, actual.getSalary());
+        StepVerifier.create(employeeMono)
+                .expectNextMatches(employee -> {
+                    return
+                            employee.getName().equals("KING")
+                            && employee.getJob().equals(JobCode.PRESIDENT.getCode())
+                            && employee.getSalary() == 5000;
+                })
+                .verifyComplete();
     }
 
     @Test
